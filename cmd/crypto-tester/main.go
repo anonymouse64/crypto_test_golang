@@ -12,6 +12,7 @@ import (
 	"hash"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -51,17 +52,41 @@ type HasherType struct {
 }
 
 type HashResult struct {
-	Algorithm   string `json:"alg"`
-	BytesHashNs int64  `json:"bytes_ns"`
-	FileHashNs  int64  `json:"file_ns"`
+	Algorithm string `json:"alg"`
+	BytesHash int64  `json:"bytes"`
+	FileHash  int64  `json:"file"`
 }
 
 func main() {
 	// Get the file from the flag
 	fileStr := flag.String("file", "file.txt", "file to hash")
 
+	unitStr := flag.String("unit", "ns", "units to use (possible values : ns, us, ms, s)")
 	// Parse command line flags
 	flag.Parse()
+
+	// Check the units to use
+	var timeVal time.Duration
+	switch strings.ToLower(*unitStr) {
+	case "ns":
+		// use Nanoseconds
+		timeVal = time.Nanosecond
+	case "us":
+		timeVal = time.Microsecond
+	case "ms":
+		timeVal = time.Millisecond
+	case "s":
+		timeVal = time.Second
+	default:
+		fmt.Println("wrong value for units")
+		os.Exit(1)
+	}
+
+	// Check to make sure file exists
+	if _, err := os.Stat(*fileStr); os.IsNotExist(err) {
+		fmt.Printf("file %s does not exist\n")
+		os.Exit(1)
+	}
 
 	// Make all the hasher objects
 	hasherTable := initializeHasherTable()
@@ -82,9 +107,9 @@ func main() {
 		_, timeElapsedFile := timeFileHash(hasher.HashType, *fileStr)
 
 		results[index] = HashResult{
-			Algorithm:   hasher.Name,
-			BytesHashNs: int64(timeElapsedBytes / time.Nanosecond),
-			FileHashNs:  int64(timeElapsedFile / time.Nanosecond),
+			Algorithm: hasher.Name,
+			BytesHash: int64(timeElapsedBytes / timeVal),
+			FileHash:  int64(timeElapsedFile / timeVal),
 		}
 	}
 
