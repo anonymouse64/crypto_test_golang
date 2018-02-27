@@ -29,7 +29,6 @@ func timeFileHash(hasher crypto.Hash, file string) ([]byte, time.Duration) {
 func main() {
 	// Setup flags
 	fileStr := flag.String("file", "", "file to hash")
-	randomMode := flag.Bool("random", true, "whether to generate a random file or not")
 	randomSizeMB := flag.Int64("size", 10, "size of generated random file")
 	unitStr := flag.String("unit", "s", "units to use (possible values : ns, us, ms, s)")
 	algStr := flag.String("alg", "sha3_512", "algorithm to use, sha3_512, sha3_384, sha3_256, or sha3_224")
@@ -69,7 +68,7 @@ func main() {
 	case !fileExistsQ && *fileStr != "":
 		// File was specified but doesn't exist - we can use err as it won't have been cleared yet
 		log.Fatalf("error : file %s doesn't exist\n", *fileStr)
-	case *randomMode && !fileExistsQ:
+	case !fileExistsQ:
 		// then don't use a file - generate one randomly
 		fileSize = (*randomSizeMB) * 1048576
 		randomBytes := make([]byte, fileSize)
