@@ -56,7 +56,6 @@ func main() {
 	// might be generating a random file
 	var fileExistsQ bool
 	var fileSize int64
-	var err error
 	if file, err := os.Stat(*fileStr); os.IsNotExist(err) {
 		fileExistsQ = false
 	} else {
@@ -67,9 +66,9 @@ func main() {
 
 	// Now check the type of file handling
 	switch {
-	case !(*randomMode) && !fileExistsQ:
+	case !fileExistsQ && *fileStr != "":
 		// File was specified but doesn't exist - we can use err as it won't have been cleared yet
-		log.Fatalf("error : file %s doesn't exist (%+v)\n", *fileStr, err)
+		log.Fatalf("error : file %s doesn't exist\n", *fileStr)
 	case *randomMode && !fileExistsQ:
 		// then don't use a file - generate one randomly
 		fileSize = (*randomSizeMB) * 1048576
