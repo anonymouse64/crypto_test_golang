@@ -31,21 +31,80 @@ go build ./cmd/crypto-tester/
 
 #### crypto-tester
 
+```
+pi@raspberrypi:~ $ $GOPATH/bin/crypto-tester --help
+Usage of /home/pi/go/bin/crypto-tester:
+  -escape-quote
+    	whether to escape quotes in the json output
+  -file string
+    	file to hash (random file is generated if this is omitted)
+  -format string
+    	format to output (json or yaml) (default "json")
+  -size int
+    	size of generated random file (default 10)
+  -unit string
+    	units to use (possible values : ns, us, ms, s) (default "ns")
+```
+
 This utility is intended to benchmark multiple different crypto hashing algorithms built into golang. You can specify what file to run against with the `-file=file.txt` option. If this option is omitted, a random 10 MB file will be generated and used (it is generated from `crypto/rand`'s Read: https://golang.org/pkg/crypto/rand/#Read.
 
-There are currently 14 different algorithms tested on this file in 2 different ways.
+The output can be output in either JSON or YAML. There is also an option to escape quotes if necessary. The units default to nanoseconds, but can be changed with the `-unit` option.
+
+There are currently 14 different algorithms tested on the file in 2 different ways.
 The first way is by just running the `.Sum` method on a pre-read byte array from the file.
 The second way is by using snapcore's `osutil.FileDigest` function. 
 
-Example:
+Example with a specified file:
 
 ```
-$GOPATH/bin/crypto-tester -file=file.txt
+pi@raspberrypi:~ $ $GOPATH/bin/crypto-tester -file=file.txt- algorithm: md4
+  byteshash: 15417
+  filehash: 19789507
+- algorithm: md5
+  byteshash: 12344
+  filehash: 6573204
+- algorithm: sha1
+  byteshash: 11980
+  filehash: 15064057
+- algorithm: sha256
+  byteshash: 36198
+  filehash: 41202966
+- algorithm: sha256_224
+  byteshash: 15624
+  filehash: 20859607
+- algorithm: sha512
+  byteshash: 53437
+  filehash: 34371013
+- algorithm: sha512_224
+  byteshash: 18958
+  filehash: 36242777
+- algorithm: sha512_256
+  byteshash: 19687
+  filehash: 33092425
+- algorithm: sha384
+  byteshash: 18750
+  filehash: 32011127
+- algorithm: ripemd160
+  byteshash: 14011
+  filehash: 25559693
+- algorithm: sha3_224
+  byteshash: 41719
+  filehash: 23439701
+- algorithm: sha3_256
+  byteshash: 17083
+  filehash: 25225267
+- algorithm: sha3_384
+  byteshash: 19687
+  filehash: 31246859
+- algorithm: sha3_512
+  byteshash: 19062
+  filehash: 43810091
+
 ```
+
+
 
 #### sha3sum
-
-This utility is intended to benchmark specifically sha3 (or various variants of it) against a file, either randomly generated or specified with the `-file` option.
 
 ```
 pi@raspberrypi:~ $ $GOPATH/bin/sha3sum --help
@@ -60,7 +119,9 @@ Usage of /home/pi/go/bin/sha3sum:
     	units to use (possible values : ns, us, ms, s) (default "s")
 ```
 
-Example with randomly generated file:
+This utility is intended to benchmark specifically sha3 (or various variants of it) against a file, either randomly generated or specified with the `-file` option. The output unit can be changed with the `unit` file, and the specific algorithm to use can be specified with the `-alg` option.
+
+Use a randomly generated file:
 
 ```
 pi@raspberrypi:~ $ $GOPATH/bin/sha3sum 
