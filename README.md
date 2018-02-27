@@ -47,8 +47,25 @@ $GOPATH/bin/crypto-tester -file=file.txt
 
 This utility is intended to benchmark specifically sha3 (or various variants of it) against a file, either randomly generated or specified with the `-file` option.
 
+```
+pi@raspberrypi:~ $ $GOPATH/bin/sha3sum --help
+Usage of /home/pi/go/bin/sha3sum:
+  -alg string
+    	algorithm to use, sha3_512, sha3_384, sha3_256, or sha3_224 (default "sha3_512")
+  -file string
+    	file to hash
+  -random
+    	whether to generate a random file or not (default true)
+  -size int
+    	size of generated random file (default 10)
+  -unit string
+    	units to use (possible values : ns, us, ms, s) (default "s")
+```
+
 Example:
 
 ```
-$GOPATH/bin/sha3sum
+pi@raspberrypi:~ $ $GOPATH/bin/sha3sum 
+6b792386272d67d01424e7b1714815289b95bf749a24f1c68b21825ccee270c788fcef7f51266e791b2895e0999ac886e828cae70f4e54d0ca0c891d2c6e41c1 /tmp/sha3sum_example107825369
+Calculated in 1.550840 sec,  6.45 MBps
 ```
