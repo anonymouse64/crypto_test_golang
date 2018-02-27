@@ -54,18 +54,33 @@ Usage of /home/pi/go/bin/sha3sum:
     	algorithm to use, sha3_512, sha3_384, sha3_256, or sha3_224 (default "sha3_512")
   -file string
     	file to hash
-  -random
-    	whether to generate a random file or not (default true)
   -size int
     	size of generated random file (default 10)
   -unit string
     	units to use (possible values : ns, us, ms, s) (default "s")
 ```
 
-Example:
+Example with randomly generated file:
 
 ```
 pi@raspberrypi:~ $ $GOPATH/bin/sha3sum 
 6b792386272d67d01424e7b1714815289b95bf749a24f1c68b21825ccee270c788fcef7f51266e791b2895e0999ac886e828cae70f4e54d0ca0c891d2c6e41c1 /tmp/sha3sum_example107825369
 Calculated in 1.550840 sec,  6.45 MBps
 ```
+
+Specify a file:
+
+```
+pi@raspberrypi:~ $ $GOPATH/bin/sha3sum -file=file.txt
+bb8f2e943d20d37d0984c07038a34d71f4b6ad67db5124cb28097e89365de9aa163e5f3c18e0f4227a6d4c0ab03a97b44154d4fccf957264014fa9de4614d56a file.txt
+Calculated in 0.068106 sec,  3.96 MBps
+```
+
+Specify the size of the randomly generated file in Megabytes:
+```
+pi@raspberrypi:~ $ $GOPATH/bin/sha3sum -size=100
+e01db5396e44d47435c81d4b0647463f43ee5923ce24013b714563868abfde8434ab974857d5eb2ccab6ee9bf51e34a730f3c29bf8a9c0ef995e1ddbe49a8d21 /tmp/sha3sum_example556721470
+Calculated in 15.340368 sec,  6.52 MBps
+
+```
+
