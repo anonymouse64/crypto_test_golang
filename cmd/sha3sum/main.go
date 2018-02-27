@@ -114,8 +114,7 @@ func main() {
 	case "sha3_224":
 		hasherToUse = crypto.SHA3_224
 	default:
-		fmt.Printf("algorithm %s not supported\n", *algStr)
-		os.Exit(1)
+		log.Fatalf("error: algorithm %s not supported\n", *algStr)
 	}
 
 	// Run the hash
