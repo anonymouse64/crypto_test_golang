@@ -3,6 +3,7 @@ package main
 import (
 	"crypto"
 	"crypto/md5"
+	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
@@ -17,10 +18,10 @@ import (
 	"time"
 
 	osutil "github.com/snapcore/snapd/osutil"
-
 	md4 "golang.org/x/crypto/md4"
 	ripemd160 "golang.org/x/crypto/ripemd160"
 	sha3 "golang.org/x/crypto/sha3"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func timeBytesHash(hasher hash.Hash, bytes []byte) ([]byte, time.Duration) {
@@ -59,17 +60,19 @@ type HashResult struct {
 
 func main() {
 	// Get the file from the flag
-	fileStr := flag.String("file", "file.txt", "file to hash")
-
+	fileStr := flag.String("file", "", "file to hash (random file is generated if this is omitted)")
+	randomSizeMB := flag.Int64("size", 10, "size of generated random file")
 	unitStr := flag.String("unit", "ns", "units to use (possible values : ns, us, ms, s)")
+	escapteQuotes := flag.Bool("escape-quote", false, "whether to escape quotes in the json output")
+	formatStr := flag.String("format", "json", "format to output (json or yaml)")
+
 	// Parse command line flags
 	flag.Parse()
 
-	// Check the units to use
+	// Check the units to use for output
 	var timeVal time.Duration
 	switch strings.ToLower(*unitStr) {
 	case "ns":
-		// use Nanoseconds
 		timeVal = time.Nanosecond
 	case "us":
 		timeVal = time.Microsecond
@@ -78,31 +81,72 @@ func main() {
 	case "s":
 		timeVal = time.Second
 	default:
-		fmt.Println("wrong value for units")
-		os.Exit(1)
+		log.Fatalf("error : invalid units specification %s\n", *unitStr)
 	}
 
-	// Check to make sure file exists
-	if _, err := os.Stat(*fileStr); os.IsNotExist(err) {
-		fmt.Printf("file %s does not exist\n")
-		os.Exit(1)
+	// Check whether the file exists or not, if it doesn't that might be okay as we
+	// might be generating a random file
+	var fileExistsQ bool
+	var fileSize int64
+	if file, err := os.Stat(*fileStr); os.IsNotExist(err) {
+		fileExistsQ = false
+	} else {
+		fileExistsQ = true
+		// Also save the file size now that we have a file that exists
+		fileSize = file.Size()
+	}
+
+	// Now check the type of file handling
+	switch {
+	case !fileExistsQ && *fileStr != "":
+		// File was specified but doesn't exist - we can use err as it won't have been cleared yet
+		log.Fatalf("error : file %s doesn't exist\n", *fileStr)
+	case !fileExistsQ:
+		// then don't use a file - generate one randomly
+		fileSize = (*randomSizeMB) * 1048576
+		randomBytes := make([]byte, fileSize)
+
+		// Read this many bytes from the OS's random number generator
+		_, err := rand.Read(randomBytes)
+
+		// Make a new temp file
+		tmpfile, err := ioutil.TempFile("", "crypto_tester_example")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Clean up automatically
+		defer os.Remove(tmpfile.Name())
+
+		// Write out all the random bytes to the file
+		if _, err := tmpfile.Write(randomBytes); err != nil {
+			log.Fatal(err)
+		}
+
+		// Close the file as we want osutil.FileDigest to read the file
+		if err := tmpfile.Close(); err != nil {
+			log.Fatal(err)
+		}
+
+		// Can't take the address of .Name() method, so save it in a variable first
+		var tempfileName string
+		tempfileName = tmpfile.Name()
+		fileStr = &tempfileName
 	}
 
 	// Make all the hasher objects
 	hasherTable := initializeHasherTable()
 
-	// Read in the file as a byte array
+	// Read in the file as a byte array for the bytes test
 	bytes, err := ioutil.ReadFile(*fileStr)
 	if err != nil {
-		log.Fatalf("Error reading a file : %+v\n", err)
+		log.Fatalf("error reading file: %+v\n", err)
 	}
 
-	var results []HashResult
-	results = make([]HashResult, len(hasherTable))
-
-	// For each hasher run the hash and print off how long it took
+	// For each hasher run the hash and save the results
+	results := make([]HashResult, len(hasherTable))
 	for index, hasher := range hasherTable {
-		// Compute the hash for each one
+		// Compute the hash for each type, the bytes and the file
 		_, timeElapsedBytes := timeBytesHash(hasher.Hasher, bytes)
 		_, timeElapsedFile := timeFileHash(hasher.HashType, *fileStr)
 
@@ -113,12 +157,28 @@ func main() {
 		}
 	}
 
-	jsonbytes, err := json.Marshal(results)
-	if err != nil {
-		log.Fatalf("failed to encode json")
+	// Finally, handle the output format, json or yaml
+	var resultBytes []byte
+	switch *formatStr {
+	case "json":
+		resultBytes, err = json.Marshal(results)
+	case "yaml":
+		resultBytes, err = yaml.Marshal(results)
+	default:
+		log.Fatalf("error: invalid format %s (supported formats are yaml or json)\n", *formatStr)
 	}
 
-	fmt.Println(strings.Replace(string(jsonbytes[:]), "\"", "\\\"", -1))
+	// Check on the encoding error
+	if err != nil {
+		log.Fatalf("error: failed to encode output: %+v\n", err)
+	}
+
+	// Check if we should escapte the quote character or not
+	if *escapteQuotes {
+		fmt.Println(strings.Replace(string(resultBytes[:]), "\"", "\\\"", -1))
+	} else {
+		fmt.Println(string(resultBytes[:]))
+	}
 }
 
 func initializeHasherTable() []HasherType {
