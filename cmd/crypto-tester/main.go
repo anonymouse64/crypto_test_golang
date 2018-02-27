@@ -64,7 +64,7 @@ func main() {
 	randomSizeMB := flag.Int64("size", 10, "size of generated random file")
 	unitStr := flag.String("unit", "ns", "units to use (possible values : ns, us, ms, s)")
 	escapteQuotes := flag.Bool("escape-quote", false, "whether to escape quotes in the json output")
-	formatStr := flag.String("format", "json", "format to output (json or yaml)")
+	formatStr := flag.String("format", "yaml", "format to output (json or yaml)")
 
 	// Parse command line flags
 	flag.Parse()
