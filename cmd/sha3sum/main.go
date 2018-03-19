@@ -32,6 +32,8 @@ func main() {
 	randomSizeMB := flag.Int64("size", 10, "size of generated random file")
 	unitStr := flag.String("unit", "s", "units to use (possible values : ns, us, ms, s)")
 	algStr := flag.String("alg", "sha3_512", "algorithm to use, sha3_512, sha3_384, sha3_256, or sha3_224")
+	numIters := flag.Int("iter", 1, "number of iterations to run")
+	avgTimes := flag.Bool("avg", false, "whether to average the time results or not")
 
 	// Parse command line flags
 	flag.Parse()
@@ -117,12 +119,32 @@ func main() {
 		log.Fatalf("error: algorithm %s not supported\n", *algStr)
 	}
 
-	// Run the hash
-	hashBytes, timeElapsedFile := timeFileHash(hasherToUse, *fileStr)
+	// Run the hash the specified number of iterations
+	timeResults := make([]time.Duration, *numIters)
+	var hashBytes []byte
+	var timeRes time.Duration
+	for i := 0; i < *numIters; i += 1 {
+		hashBytes, timeRes = timeFileHash(hasherToUse, *fileStr)
+		timeResults[i] = timeRes
+	}
 
 	// Print the hash and the file name
 	fmt.Printf("%x %s\n", hashBytes, *fileStr)
 
 	// Print the stats
-	fmt.Printf("Calculated in %3f sec, %5.2f MBps\n", float64(timeElapsedFile)/float64(timeVal), float64(fileSize)/1048576/(float64(timeElapsedFile)/float64(time.Second)))
+	if *avgTimes {
+		var timeAvg float64
+		for _, timeRes := range timeResults {
+			timeAvg += float64(timeRes)
+		}
+		timeAvg = timeAvg / float64(*numIters)
+
+		fmt.Printf("Calculated in %3f sec, %5.2f MBps\n", timeAvg/float64(timeVal), float64(fileSize)/1048576/(timeAvg/float64(time.Second)))
+	} else {
+		// just print off the stats for each run
+		for _, timeRes := range timeResults {
+			fmt.Printf("Calculated in %3f sec, %5.2f MBps\n", float64(timeRes)/float64(timeVal), float64(fileSize)/1048576/(float64(timeRes)/float64(time.Second)))
+		}
+	}
+
 }
