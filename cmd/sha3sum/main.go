@@ -146,5 +146,4 @@ func main() {
 			fmt.Printf("Calculated in %3f sec, %5.2f MBps\n", float64(timeRes)/float64(timeVal), float64(fileSize)/1048576/(float64(timeRes)/float64(time.Second)))
 		}
 	}
-
 }

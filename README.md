@@ -1,5 +1,7 @@
 ## Crypto Testing in Golang
 
+[![license](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+
 These simple tools test the efficiency of various different hashing algorithms implemented in golang.
 
 The first tool `crypto-tester` works by running different algorithms against the same file and outputting the results.
