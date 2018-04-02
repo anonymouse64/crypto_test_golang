@@ -1,5 +1,6 @@
 ## Crypto Testing in Golang
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/anonymouse64/crypto_test_golang)](https://goreportcard.com/report/github.com/anonymouse64/crypto_test_golang)
 [![license](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 
 These simple tools test the efficiency of various different hashing algorithms implemented in golang.
